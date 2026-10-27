@@ -101,3 +101,65 @@ body {
 @utility card {
   @apply rounded-lg border border-line bg-paper-raised shadow-[0_1px_0_var(--line)];
 }
+
+/* ── Wykres drzewa (biblioteka family-chart) w naszych kolorach ─────────── */
+.f3.kz-chart {
+  --background-color: transparent;
+  --text-color: var(--ink);
+  --male-color: var(--paper-raised);
+  --female-color: var(--paper-raised);
+  --genderless-color: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  touch-action: none;
+}
+.kz-chart path.link {
+  stroke: var(--ink-muted);
+  stroke-width: 1.5px;
+}
+.kz-chart path.link.f3-path-to-main {
+  stroke: var(--accent);
+  stroke-width: 3px;
+}
+.kz-card {
+  width: 200px;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-left-width: 6px;
+  border-radius: 8px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.kz-card-m {
+  border-left-color: #5b7c88;
+}
+.kz-card-f {
+  border-left-color: #a8636e;
+}
+.kz-card-u {
+  border-left-color: var(--line);
+}
+.card:hover .kz-card {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+.card-main .kz-card {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+.kz-card-name {
+  font-weight: 600;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kz-card-years {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}

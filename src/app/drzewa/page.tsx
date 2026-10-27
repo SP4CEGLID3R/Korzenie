@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -30,6 +31,12 @@ export default function TreesPage() {
 
       <div className="mt-8">
         <CreateTreeForm />
+        <p className="mt-3 text-sm text-ink-muted">
+          Masz drzewo w innym serwisie lub programie?{" "}
+          <Link href="/drzewa/import" className="font-semibold text-accent underline underline-offset-4">
+            Zaimportuj plik GEDCOM
+          </Link>
+        </p>
       </div>
 
       <Suspense fallback={<p className="mt-8 text-ink-muted">Wczytywanie drzew…</p>}>
@@ -52,7 +59,7 @@ async function TreeList() {
       <div className="mt-8 rounded-lg border border-dashed border-line p-8 text-center">
         <p className="font-serif text-xl">Nie masz jeszcze żadnego drzewa.</p>
         <p className="mt-2 text-ink-muted">
-          Nadaj mu nazwę powyżej. Dodawanie osób pojawi się w kolejnym etapie budowy serwisu.
+          Nadaj mu nazwę powyżej, a potem zacznij od siebie – wpisz siebie, rodziców i dziadków.
         </p>
       </div>
     );
@@ -61,8 +68,13 @@ async function TreeList() {
   return (
     <ul className="mt-8 grid gap-4 sm:grid-cols-2">
       {memberships.map(({ tree, role }) => (
-        <li key={tree.id} className="card p-5">
-          <h2 className="font-serif text-xl font-semibold">{tree.name}</h2>
+        <li key={tree.id} className="card relative p-5 hover:border-accent">
+          <h2 className="font-serif text-xl font-semibold">
+            {/* Cała karta jest klikalna dzięki rozciągniętemu linkowi. */}
+            <Link href={`/drzewa/${tree.id}`} className="after:absolute after:inset-0">
+              {tree.name}
+            </Link>
+          </h2>
           <p className="mt-1 text-sm text-ink-muted">
             Założone {dateFormat.format(tree.createdAt)} · {tree._count.persons}{" "}
             {personWord(tree._count.persons)}

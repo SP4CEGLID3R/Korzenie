@@ -251,6 +251,8 @@ enum EventType {
   BURIAL
   RESIDENCE
   EMIGRATION
+  /// Zawód / stan (np. „rolnik”, „włościanin”) – treść w polu description.
+  OCCUPATION
   OTHER
 
   @@schema("app")
@@ -344,8 +346,11 @@ enum Partition {
 model Place {
   id           String     @id @default(uuid(7)) @db.Uuid
   treeId       String     @db.Uuid
-  /// Nazwa współczesna.
+  /// Nazwa miejscowości (współczesna).
   name         String
+  /// Dalsza część opisu miejsca, np. „kielecki, świętokrzyskie, Polska”
+  /// (tak jak w polu PLAC w GEDCOM, bez pierwszego członu).
+  jurisdiction String?
   parish       String?
   municipality String?
   county       String?

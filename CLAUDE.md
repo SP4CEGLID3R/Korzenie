@@ -42,9 +42,14 @@ rozwiązania, pracuj fazami i po każdej fazie zatrzymaj się z instrukcją test
 - UI, komunikaty i komentarze po polsku; identyfikatory w kodzie po angielsku. Polskie URL-e
   (`/drzewa`, `/logowanie`). Mobile-first. Kolory tylko przez tokeny z `globals.css`
   (papier/atrament/sepia, tryb ciemny przez klasę `.dark`). Teksty neutralne płciowo.
+- Logika domenowa (daty, nazwiska, spójność, GEDCOM, wykres) jest czysta i testowana w
+  `src/lib/genealogy` i `src/lib/gedcom`; działa na `TreeSnapshot`, nie na Prismie.
+- Formularze: `ActionForm` (nie czyści pól po błędzie), pola z `useId()` – Next trzyma ukryte
+  poprzednie strony (Activity), więc stałe `id` by się dublowały. Po zapisie z przekierowaniem:
+  `revalidatePath("/drzewa/<id>", "layout")`.
 - Przed oddaniem fazy: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 
 ## Fazy
-0 fundament ✅ · 1 ręczne drzewo, GEDCOM, spójność · 2 silnik dopasowań + Wikidata + „Odkrycia” ·
+0 fundament ✅ · 1 ręczne drzewo, GEDCOM, spójność ✅ · 2 silnik dopasowań + Wikidata + „Odkrycia” ·
 3 Geneteka + Tropiciel · 4 AI (biografie, kontekst, Commons, czytnik, czat) ·
 5 udostępnianie, komentarze, mapa, polityka prywatności, usuwanie konta, limity AI, Vercel.

@@ -4,10 +4,11 @@ Polski serwis do budowania drzew genealogicznych i odkrywania przodków
 z wykorzystaniem polskich źródeł (indeksy metrykalne, archiwa, otwarte bazy)
 i AI, które **nigdy nie wymyśla faktów**.
 
-> **Stan: faza 0 – fundament.** Działa logowanie (e-mail + hasło lub link na
-> e-mail), wylogowanie, panel „Moje drzewa” z tworzeniem drzewa, motyw jasny
-> i ciemny. Kolejne fazy: ręczne drzewo i GEDCOM → silnik dopasowań → polskie
-> źródła → funkcje AI → społeczność i wdrożenie.
+> **Stan: faza 1 – ręczne drzewo.** Działa logowanie, drzewa bez limitu osób,
+> formularz „Zacznij od siebie”, dodawanie i edycja osób, wydarzeń (z datami
+> genealogicznymi typu „ok. 1850”, „przed 1863”) i relacji, wykres drzewa,
+> import i eksport GEDCOM oraz „Strażnik spójności”. Kolejne fazy: silnik
+> dopasowań → polskie źródła → funkcje AI → społeczność i wdrożenie.
 
 ---
 
@@ -107,6 +108,22 @@ Otwórz <http://localhost:3000>.
 > Sign In / Providers → Email → Confirm email**. Przed startem publicznym podłączymy
 > własny serwer pocztowy (np. Resend).
 
+### 8. Faza 1 – drzewo, GEDCOM, spójność
+
+1. **Moje drzewa** → wpisz nazwę → **Utwórz drzewo**. Zobaczysz formularz **„Zacznij od siebie”**.
+2. Wpisz siebie, rodziców (i ewentualnie dziadków). Pole daty od razu pokazuje, jak
+   aplikacja ją zrozumiała – spróbuj „ok. 1930”, „przed 1863”, „12.03.1850”, „1850–1855”.
+3. Po zapisaniu zobaczysz **wykres drzewa**. Kliknij osobę – stanie w środku; kliknij ponownie –
+   otworzy się jej **karta**.
+4. Na karcie osoby: dodaj wydarzenie (np. zawód, zgon), datę i miejsce ślubu, **syna / córkę**
+   (nazwisko podpowie się w formie żeńskiej, np. Nowicki → Nowicka), rodzica lub małżonka.
+   „Połącz z osobą, która już jest w drzewie” łączy dwie istniejące osoby.
+5. Wpisz specjalnie błędną datę (np. zgon ojca przed urodzeniem dziecka) – na karcie i w zakładce
+   **Spójność** pojawi się ostrzeżenie.
+6. **Ustawienia i eksport** → **Pobierz pełne drzewo (.ged)**. Potem **Moje drzewa → Zaimportuj
+   plik GEDCOM** i wgraj pobrany plik (albo eksport z innego serwisu) – powstanie nowe drzewo.
+7. W ustawieniach zmień nazwę drzewa i usuń drzewo testowe (trzeba wpisać jego nazwę).
+
 ---
 
 ## Wariant B: wszystko lokalnie (Docker)
@@ -165,9 +182,14 @@ src/
     page.tsx             strona startowa
     (auth)/              logowanie, rejestracja i akcje logowania
     auth/confirm/        tu prowadzą linki z maili
-    drzewa/              panel „Moje drzewa”
-  components/            nagłówek, stopka, przełącznik motywu, logo
+    drzewa/              panel „Moje drzewa”, import GEDCOM
+      [treeId]/          drzewo: wykres, osoby, karta osoby, spójność, ustawienia, eksport
+        actions.ts       wszystkie zmiany w drzewie (osoby, wydarzenia, relacje)
+  components/            nagłówek, stopka, motyw, logo, pola formularzy
   lib/
+    genealogy/           daty genealogiczne, nazwiska, spójność, dane do wykresu (+ testy)
+    gedcom/              czytanie, import i eksport GEDCOM 5.5.1 (+ testy)
+    trees/               uprawnienia do drzewa, odczyt i zapis w bazie, formularze
     auth.ts              kto jest zalogowany (używaj w każdej stronie i akcji)
     db.ts                połączenie z bazą (Prisma)
     env.ts               sprawdzanie zmiennych środowiskowych
@@ -202,6 +224,8 @@ src/
 | „Link wygasł albo został już użyty” | Link z maila działa raz i tylko w przeglądarce, w której o niego poproszono. Poproś o nowy. Sprawdź też *Redirect URLs* (krok 4). |
 | Mail nie przychodzi | Sprawdź spam. Darmowy Supabase ma niski limit maili na godzinę (patrz krok 7). |
 | Po `git pull` coś nie działa | Uruchom `npm install` i `npm run db:deploy`. |
+| Import GEDCOM: „Plik jest za duży” | Limit to 4 MB (tyle przyjmuje darmowy hosting). Duże drzewo wyeksportuj bez zdjęć albo podziel. |
+| Polskie znaki po imporcie są zepsute | Plik był w starym kodowaniu (ANSEL). Wyeksportuj drzewo ponownie, wybierając UTF-8. |
 
 ---
 
