@@ -1,0 +1,27 @@
+# Zależności
+/node_modules
+
+# Testy
+/coverage
+
+# Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# Klient Prisma generowany automatycznie (npm install / npm run db:generate)
+/src/generated
+
+# Pliki środowiskowe – NIGDY nie commituj prawdziwych kluczy.
+.env*
+!.env.example
+
+# Vercel
+.vercel
+
+# Różne
+.DS_Store
+*.pem
+npm-debug.log*

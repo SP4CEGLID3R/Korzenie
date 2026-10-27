@@ -1,0 +1,677 @@
+// Schemat bazy danych „Korzenie”.
+// Dokumentacja Prisma: https://www.prisma.io/docs/orm/prisma-schema
+//
+// Wszystkie tabele aplikacji żyją w osobnym schemacie Postgresa „app”.
+// Supabase udostępnia przez swoje publiczne API (klucz publishable/anon)
+// tylko schemat „public”, więc nasze dane są dostępne wyłącznie przez
+// serwer aplikacji, który sam sprawdza uprawnienia.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["app"]
+}
+
+// ───────────────────────────── Użytkownicy i drzewa ─────────────────────────────
+
+/// Użytkownik aplikacji. `id` to identyfikator z Supabase Auth (auth.users.id).
+model User {
+  id          String   @id @db.Uuid
+  email       String   @unique
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownedTrees     Tree[]       @relation("TreeOwner")
+  memberships    TreeMember[]
+  uploadedMedia  Media[]
+  decidedMatches Match[]
+  aiCalls        AiCall[]
+
+  @@schema("app")
+}
+
+enum TreeVisibility {
+  PRIVATE // tylko członkowie drzewa (domyślnie)
+  LINK // każdy z linkiem; osoby żyjące ukryte
+  PUBLIC // widoczne publicznie; osoby żyjące ukryte
+
+  @@schema("app")
+}
+
+enum TreeRole {
+  OWNER
+  EDITOR
+  VIEWER
+
+  @@schema("app")
+}
+
+model Tree {
+  id           String         @id @default(uuid(7)) @db.Uuid
+  name         String
+  description  String?
+  visibility   TreeVisibility @default(PRIVATE)
+  /// Losowy token do udostępniania linkiem (gdy visibility = LINK).
+  shareToken   String?        @unique
+  ownerId      String         @db.Uuid
+  /// Osoba, od której zaczyna się widok drzewa (zwykle sam użytkownik).
+  homePersonId String?        @unique @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  owner      User           @relation("TreeOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  homePerson Person?        @relation("TreeHomePerson", fields: [homePersonId], references: [id], onDelete: SetNull)
+  members    TreeMember[]
+  persons    Person[]       @relation("TreePersons")
+  events     Event[]
+  unions     Union[]
+  places     Place[]
+  sources    Source[]
+  media      Media[]
+  tasks      ResearchTask[]
+
+  @@index([ownerId])
+  @@schema("app")
+}
+
+model TreeMember {
+  treeId    String   @db.Uuid
+  userId    String   @db.Uuid
+  role      TreeRole
+  createdAt DateTime @default(now())
+
+  tree Tree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([treeId, userId])
+  @@index([userId])
+  @@schema("app")
+}
+
+// ───────────────────────────────── Osoby ─────────────────────────────────
+
+enum Sex {
+  MALE
+  FEMALE
+  UNKNOWN
+
+  @@schema("app")
+}
+
+/// AUTO = aplikacja sama ocenia (reguła 100 lat), pozostałe to ręczne ustawienie.
+enum LivingStatus {
+  AUTO
+  LIVING
+  DECEASED
+
+  @@schema("app")
+}
+
+model Person {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  treeId       String       @db.Uuid
+  sex          Sex          @default(UNKNOWN)
+  livingStatus LivingStatus @default(AUTO)
+  notes        String?
+  /// Identyfikator z importu GEDCOM (np. "@I12@"), żeby ponowny import nie dublował osób.
+  gedcomId     String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tree           Tree               @relation("TreePersons", fields: [treeId], references: [id], onDelete: Cascade)
+  homeOfTree     Tree?              @relation("TreeHomePerson")
+  names          PersonName[]
+  eventRoles     EventParticipant[]
+  parentLinks    ParentChild[]      @relation("ChildLinks")
+  childLinks     ParentChild[]      @relation("ParentLinks")
+  unionsAsFirst  Union[]            @relation("UnionPartner1")
+  unionsAsSecond Union[]            @relation("UnionPartner2")
+  citations      Citation[]
+  matches        Match[]
+  media          MediaPerson[]
+  stories        Story[]
+  tasks          ResearchTask[]
+
+  @@index([treeId])
+  @@schema("app")
+}
+
+enum NameType {
+  BIRTH // nazwisko rodowe / imiona z chrztu
+  MARRIED // nazwisko po ślubie
+  RECORDED // forma zapisana w dokumencie (np. łacińska)
+  ALIAS // przydomek, inna forma
+
+  @@schema("app")
+}
+
+enum NameLanguage {
+  PL
+  LA
+  RU
+  DE
+  OTHER
+
+  @@schema("app")
+}
+
+model PersonName {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  personId       String       @db.Uuid
+  type           NameType     @default(BIRTH)
+  isPrimary      Boolean      @default(false)
+  /// Imię lub imiona dokładnie tak, jak wpisano (z polskimi znakami).
+  givenNames     String
+  surname        String?
+  /// Nazwisko rodowe (dla kobiet zamężnych często najważniejszy trop w metrykach).
+  birthSurname   String?
+  language       NameLanguage @default(PL)
+  /// Dodatkowe warianty pisowni podane przez użytkownika.
+  variants       String[]
+  /// Formy znormalizowane do porównań (wypełnia silnik dopasowań, faza 2).
+  givenNamesNorm String?
+  surnameNorm    String?
+  sortOrder      Int          @default(0)
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId])
+  @@index([surnameNorm])
+  @@schema("app")
+}
+
+// ───────────────────────────── Relacje rodzinne ─────────────────────────────
+
+enum ParentChildType {
+  BIOLOGICAL
+  ADOPTIVE
+  FOSTER
+  STEP
+  UNKNOWN
+
+  @@schema("app")
+}
+
+model ParentChild {
+  id       String          @id @default(uuid(7)) @db.Uuid
+  parentId String          @db.Uuid
+  childId  String          @db.Uuid
+  type     ParentChildType @default(BIOLOGICAL)
+
+  parent Person @relation("ParentLinks", fields: [parentId], references: [id], onDelete: Cascade)
+  child  Person @relation("ChildLinks", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+  @@index([childId])
+  @@schema("app")
+}
+
+enum UnionType {
+  MARRIAGE
+  PARTNERSHIP
+  UNKNOWN
+
+  @@schema("app")
+}
+
+/// Związek dwojga osób. Daty (ślub, rozwód) to wydarzenia powiązane przez Event.unionId.
+model Union {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  treeId     String    @db.Uuid
+  partner1Id String    @db.Uuid
+  partner2Id String    @db.Uuid
+  type       UnionType @default(MARRIAGE)
+  notes      String?
+  createdAt  DateTime  @default(now())
+
+  tree     Tree    @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  partner1 Person  @relation("UnionPartner1", fields: [partner1Id], references: [id], onDelete: Cascade)
+  partner2 Person  @relation("UnionPartner2", fields: [partner2Id], references: [id], onDelete: Cascade)
+  events   Event[]
+
+  @@unique([partner1Id, partner2Id])
+  @@index([treeId])
+  @@index([partner2Id])
+  @@schema("app")
+}
+
+// ───────────────────────────── Wydarzenia i miejsca ─────────────────────────────
+
+enum EventType {
+  BIRTH
+  BAPTISM
+  MARRIAGE
+  DIVORCE
+  DEATH
+  BURIAL
+  RESIDENCE
+  EMIGRATION
+  OTHER
+
+  @@schema("app")
+}
+
+/// Precyzja daty: „12 III 1850”, „ok. 1850”, „przed 1863”, „po 1900”, „1850–1855”.
+enum DateQualifier {
+  EXACT
+  ABOUT
+  BEFORE
+  AFTER
+  BETWEEN
+
+  @@schema("app")
+}
+
+/// Data przechowywana w częściach, bo w genealogii często znamy tylko rok
+/// albo rok i miesiąc. Dla BETWEEN używamy pól *End.
+model Event {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  treeId        String         @db.Uuid
+  type          EventType
+  dateQualifier DateQualifier?
+  dateYear      Int?
+  dateMonth     Int?
+  dateDay       Int?
+  dateEndYear   Int?
+  dateEndMonth  Int?
+  dateEndDay    Int?
+  /// Data tak, jak zapisano w źródle lub GEDCOM (np. "ABT 1850", "circa 1850").
+  dateText      String?
+  /// Klucz sortowania RRRRMMDD (np. 18500300) – wylicza aplikacja.
+  dateSort      Int?
+  placeId       String?        @db.Uuid
+  unionId       String?        @db.Uuid
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  tree         Tree               @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  place        Place?             @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  union        Union?             @relation(fields: [unionId], references: [id], onDelete: Cascade)
+  participants EventParticipant[]
+  citations    Citation[]
+
+  @@index([treeId, type])
+  @@index([placeId])
+  @@index([unionId])
+  @@schema("app")
+}
+
+/// Rola osoby w wydarzeniu – tak wyglądają polskie metryki
+/// (dziecko, rodzice, chrzestni, świadkowie, zgłaszający).
+enum ParticipantRole {
+  PRINCIPAL // osoba, której dotyczy wydarzenie (dziecko, zmarły)
+  GROOM
+  BRIDE
+  FATHER
+  MOTHER
+  GODPARENT
+  WITNESS
+  INFORMANT
+  OTHER
+
+  @@schema("app")
+}
+
+model EventParticipant {
+  eventId  String          @db.Uuid
+  personId String          @db.Uuid
+  role     ParticipantRole @default(PRINCIPAL)
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, personId, role])
+  @@index([personId])
+  @@schema("app")
+}
+
+enum Partition {
+  RUSSIAN // zabór rosyjski (Królestwo Polskie, ziemie zabrane)
+  PRUSSIAN // zabór pruski
+  AUSTRIAN // zabór austriacki (Galicja)
+  OTHER
+  UNKNOWN
+
+  @@schema("app")
+}
+
+model Place {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  treeId       String     @db.Uuid
+  /// Nazwa współczesna.
+  name         String
+  parish       String?
+  municipality String?
+  county       String?
+  province     String?
+  country      String?
+  /// Zabór w XIX w. (uproszczenie – dokładne granice zmieniały się w czasie).
+  partition    Partition?
+  latitude     Float?
+  longitude    Float?
+  wikidataId   String?
+  createdAt    DateTime   @default(now())
+
+  tree   Tree        @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  names  PlaceName[]
+  events Event[]
+
+  @@index([treeId])
+  @@index([wikidataId])
+  @@schema("app")
+}
+
+/// Nazwy historyczne, np. Łódź / Lodz / Litzmannstadt (1940–1945).
+model PlaceName {
+  id       String       @id @default(uuid(7)) @db.Uuid
+  placeId  String       @db.Uuid
+  name     String
+  language NameLanguage @default(PL)
+  fromYear Int?
+  toYear   Int?
+  note     String?
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([placeId])
+  @@schema("app")
+}
+
+// ───────────────────────────── Źródła i rekordy ─────────────────────────────
+
+enum SourceKind {
+  GENETEKA
+  WIKIDATA
+  WIKIMEDIA_COMMONS
+  USER_SCAN
+  GEDCOM_IMPORT
+  ARCHIVE
+  OTHER
+
+  @@schema("app")
+}
+
+/// Źródło danych. treeId = null oznacza źródło wspólne (np. Geneteka, Wikidata).
+model Source {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  treeId       String?    @db.Uuid
+  kind         SourceKind
+  title        String
+  url          String?
+  publisher    String?
+  /// Gotowy opis do przypisu, np. „Geneteka, Polskie Towarzystwo Genealogiczne”.
+  citationText String?
+  license      String?
+  createdAt    DateTime   @default(now())
+
+  tree      Tree?      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  records   Record[]
+  citations Citation[]
+
+  @@index([treeId])
+  @@schema("app")
+}
+
+enum RecordType {
+  BIRTH
+  BAPTISM
+  MARRIAGE
+  DEATH
+  BURIAL
+  PERSON // np. osoba z Wikidata
+  OTHER
+
+  @@schema("app")
+}
+
+/// Pojedynczy rekord ze źródła (np. indeks aktu urodzenia). Zawsze z linkiem do oryginału.
+model Record {
+  id         String     @id @default(uuid(7)) @db.Uuid
+  sourceId   String     @db.Uuid
+  /// Identyfikator w źródle (np. Q-id z Wikidata), do odświeżania i unikania duplikatów.
+  externalId String?
+  type       RecordType
+  /// Link do oryginału, który użytkownik może sam otworzyć.
+  url        String
+  /// Sygnatura / numer aktu, np. „akt 45/1852”.
+  signature  String?
+  year       Int?
+  parish     String?
+  /// Dane surowe dokładnie tak, jak przyszły ze źródła.
+  raw        Json
+  /// Pola znormalizowane do dopasowań (imiona, nazwiska, rodzice…).
+  normalized Json?
+  fetchedAt  DateTime   @default(now())
+
+  source    Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  citations Citation[]
+  matches   Match[]
+
+  @@unique([sourceId, externalId])
+  @@index([type, year])
+  @@schema("app")
+}
+
+/// Powiązanie faktu (osoby lub wydarzenia) z rekordem albo źródłem.
+model Citation {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  personId  String?  @db.Uuid
+  eventId   String?  @db.Uuid
+  recordId  String?  @db.Uuid
+  sourceId  String?  @db.Uuid
+  /// Strona, numer aktu, fragment.
+  detail    String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  person Person? @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event  Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  record Record? @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  source Source? @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([personId])
+  @@index([eventId])
+  @@schema("app")
+}
+
+/// Wyniki zapytań do zewnętrznych źródeł – żeby nie pytać ich dwa razy.
+model SourceQueryCache {
+  key       String     @id // skrót SHA-256 zapytania
+  kind      SourceKind
+  response  Json
+  fetchedAt DateTime   @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@schema("app")
+}
+
+// ───────────────────────────── Dopasowania i zadania ─────────────────────────────
+
+enum MatchStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+
+  @@schema("app")
+}
+
+/// Propozycja: osoba z drzewa ↔ rekord. Para (osoba, rekord) jest unikalna,
+/// więc odrzucona propozycja nigdy nie wraca.
+model Match {
+  id               String      @id @default(uuid(7)) @db.Uuid
+  personId         String      @db.Uuid
+  recordId         String      @db.Uuid
+  score            Int // 0–100
+  /// Lista „zgadza się / nie zgadza się / brak danych”.
+  explanation      Json
+  status           MatchStatus @default(PENDING)
+  algorithmVersion String
+  decidedById      String?     @db.Uuid
+  decidedAt        DateTime?
+  createdAt        DateTime    @default(now())
+
+  person    Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  record    Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  decidedBy User?  @relation(fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@unique([personId, recordId])
+  @@index([status])
+  @@schema("app")
+}
+
+enum ResearchTaskKind {
+  FIND_BIRTH
+  FIND_MARRIAGE
+  FIND_DEATH
+  FIND_SIBLINGS
+  FIND_PARENTS
+  OTHER
+
+  @@schema("app")
+}
+
+enum ResearchTaskStatus {
+  OPEN
+  DONE
+  DISMISSED
+
+  @@schema("app")
+}
+
+/// Propozycja asystenta, np. „szukaj ślubu Jana i Marianny w parafii X, lata 1850–1865”.
+model ResearchTask {
+  id            String             @id @default(uuid(7)) @db.Uuid
+  treeId        String             @db.Uuid
+  personId      String             @db.Uuid
+  kind          ResearchTaskKind
+  title         String
+  /// Parametry wyszukiwania: imiona, nazwiska, parafia, zakres lat, gotowe linki.
+  details       Json
+  status        ResearchTaskStatus @default(OPEN)
+  /// Dopasowanie, którego potwierdzenie wygenerowało zadanie.
+  originMatchId String?            @db.Uuid
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  tree   Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId, status])
+  @@schema("app")
+}
+
+// ───────────────────────────── Media i teksty AI ─────────────────────────────
+
+enum MediaKind {
+  PHOTO
+  SCAN
+  DOCUMENT
+
+  @@schema("app")
+}
+
+model Media {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  treeId        String    @db.Uuid
+  kind          MediaKind
+  /// Ścieżka w Supabase Storage (pliki użytkownika) …
+  storagePath   String?
+  /// … albo adres zewnętrzny (np. Wikimedia Commons).
+  externalUrl   String?
+  mimeType      String?
+  title         String?
+  description   String?
+  /// Dla materiałów z sieci: autor, licencja i strona źródłowa są obowiązkowe w UI.
+  author        String?
+  license       String?
+  licenseUrl    String?
+  sourcePageUrl String?
+  uploadedById  String?   @db.Uuid
+  createdAt     DateTime  @default(now())
+
+  tree       Tree          @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  uploadedBy User?         @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  persons    MediaPerson[]
+
+  @@index([treeId])
+  @@schema("app")
+}
+
+model MediaPerson {
+  mediaId  String @db.Uuid
+  personId String @db.Uuid
+
+  media  Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([mediaId, personId])
+  @@index([personId])
+  @@schema("app")
+}
+
+enum StoryType {
+  BIOGRAPHY
+  HISTORICAL_CONTEXT
+
+  @@schema("app")
+}
+
+/// Tekst wygenerowany przez AI. Fakty i kontekst są rozdzielone w treści,
+/// a `sources` zawiera listę źródeł z linkami.
+model Story {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  personId      String    @db.Uuid
+  type          StoryType
+  content       String
+  /// [{ "title": "...", "url": "..." }]
+  sources       Json
+  model         String
+  promptVersion String
+  /// Skrót danych wejściowych – jeśli się nie zmieniły, nie generujemy ponownie.
+  inputHash     String
+  createdAt     DateTime  @default(now())
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId, type])
+  @@schema("app")
+}
+
+/// Dziennik każdego wywołania Claude API (koszty, limity na użytkownika).
+model AiCall {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  userId           String   @db.Uuid
+  feature          String // np. "biography", "context", "reader", "chat", "normalize"
+  model            String
+  inputTokens      Int
+  outputTokens     Int
+  cacheReadTokens  Int      @default(0)
+  cacheWriteTokens Int      @default(0)
+  /// Szacowany koszt w milionowych częściach dolara.
+  costMicroUsd     Int      @default(0)
+  cacheHit         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@schema("app")
+}
+
+/// Cache odpowiedzi AI dla zadań innych niż biografie (np. normalizacja imion).
+model AiCache {
+  key       String   @id // skrót SHA-256 modelu, promptu i danych wejściowych
+  feature   String
+  model     String
+  response  Json
+  createdAt DateTime @default(now())
+
+  @@schema("app")
+}
