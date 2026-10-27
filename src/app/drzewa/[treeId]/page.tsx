@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { db } from "@/lib/db";
 import { toChartData } from "@/lib/genealogy/chart";
 import { getTreeAccess } from "@/lib/trees/access";
 import { loadTreeSnapshot } from "@/lib/trees/snapshot";
@@ -44,7 +45,12 @@ async function TreeView({ params }: { params: Promise<{ treeId: string }> }) {
     );
   }
 
-  const data = toChartData(snapshot);
+  const pendingRows = await db.match.groupBy({
+    by: ["personId"],
+    where: { status: "PENDING", person: { treeId } },
+    _count: true,
+  });
+  const data = toChartData(snapshot, new Date(), new Map(pendingRows.map((r) => [r.personId, r._count])));
   const mainId = data.some((d) => d.id === tree.homePersonId) ? tree.homePersonId! : data[0].id;
 
   return (

@@ -2,7 +2,7 @@
 // (https://github.com/donatso/family-chart): lista osób z relacjami
 // { parents, spouses, children }.
 
-import { isPresumedLiving } from "@/lib/privacy/living";
+import { livingStatusMap } from "@/lib/privacy/living";
 import { displayName, lifespan } from "./names";
 import type { TreeSnapshot } from "./types";
 
@@ -14,11 +14,17 @@ export type ChartDatum = {
     name: string;
     lifespan: string;
     living: boolean;
+    /** Liczba propozycji z Odkryć czekających na decyzję. */
+    pending: number;
   };
   rels: { parents: string[]; spouses: string[]; children: string[] };
 };
 
-export function toChartData(tree: TreeSnapshot, now: Date = new Date()): ChartDatum[] {
+export function toChartData(
+  tree: TreeSnapshot,
+  now: Date = new Date(),
+  pending: Map<string, number> = new Map(),
+): ChartDatum[] {
   const ids = new Set(tree.persons.map((p) => p.id));
   const rels = new Map(
     tree.persons.map((p) => [p.id, { parents: new Set<string>(), spouses: new Set<string>(), children: new Set<string>() }]),
@@ -42,6 +48,7 @@ export function toChartData(tree: TreeSnapshot, now: Date = new Date()): ChartDa
     if (parents.length === 2) linkSpouses(parents[0], parents[1]);
   }
 
+  const living = livingStatusMap(tree, now.getFullYear());
   return tree.persons.map((p) => {
     const r = rels.get(p.id)!;
     return {
@@ -50,7 +57,8 @@ export function toChartData(tree: TreeSnapshot, now: Date = new Date()): ChartDa
         gender: p.sex === "MALE" ? "M" : p.sex === "FEMALE" ? "F" : "U",
         name: displayName(p.names),
         lifespan: lifespan(p),
-        living: isPresumedLiving(p, now.getFullYear()),
+        living: living.get(p.id) ?? true,
+        pending: pending.get(p.id) ?? 0,
       },
       rels: { parents: [...r.parents], spouses: [...r.spouses], children: [...r.children] },
     };

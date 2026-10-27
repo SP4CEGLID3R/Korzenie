@@ -163,3 +163,9 @@ body {
   font-size: 0.85rem;
   color: var(--ink-muted);
 }
+.kz-card-badge {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}

@@ -47,9 +47,14 @@ rozwiązania, pracuj fazami i po każdej fazie zatrzymaj się z instrukcją test
 - Formularze: `ActionForm` (nie czyści pól po błędzie), pola z `useId()` – Next trzyma ukryte
   poprzednie strony (Activity), więc stałe `id` by się dublowały. Po zapisie z przekierowaniem:
   `revalidatePath("/drzewa/<id>", "layout")`.
+- Dopasowania: `src/lib/matching` (wagi w `config.ts`, wersja algorytmu zapisywana w Match).
+  Źródła: adapter `SourceAdapter` w `src/lib/sources`; ruch przez `politeFetch` (User-Agent,
+  kolejka, Retry-After) i cache `SourceQueryCache`. Osób żyjących (`livingStatusMap`) nigdy
+  nie wysyłamy na zewnątrz. Wikidata: SPARQL w dwóch krokach (wyszukiwarka → szczegóły) –
+  jedno połączone zapytanie przekraczało limit 60 s.
 - Przed oddaniem fazy: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 
 ## Fazy
-0 fundament ✅ · 1 ręczne drzewo, GEDCOM, spójność ✅ · 2 silnik dopasowań + Wikidata + „Odkrycia” ·
+0 fundament ✅ · 1 ręczne drzewo, GEDCOM, spójność ✅ · 2 silnik dopasowań + Wikidata + „Odkrycia” ✅ ·
 3 Geneteka + Tropiciel · 4 AI (biografie, kontekst, Commons, czytnik, czat) ·
 5 udostępnianie, komentarze, mapa, polityka prywatności, usuwanie konta, limity AI, Vercel.

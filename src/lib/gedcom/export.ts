@@ -2,7 +2,7 @@
 // mógł zabrać swoje dane do innego programu.
 
 import { toGedcomDate } from "@/lib/genealogy/dates";
-import { isPresumedLiving } from "@/lib/privacy/living";
+import { livingStatusMap } from "@/lib/privacy/living";
 import type {
   EventType,
   ParentChildType,
@@ -130,11 +130,8 @@ export function exportGedcom(tree: TreeSnapshot, options: ExportOptions = {}): s
   const personXref = new Map<string, string>();
   tree.persons.forEach((p, i) => personXref.set(p.id, `@I${i + 1}@`));
   const byId = new Map(tree.persons.map((p) => [p.id, p]));
-  const hidden = new Set(
-    options.hideLiving
-      ? tree.persons.filter((p) => isPresumedLiving(p, now.getFullYear())).map((p) => p.id)
-      : [],
-  );
+  const living = livingStatusMap(tree, now.getFullYear());
+  const hidden = new Set(options.hideLiving ? tree.persons.filter((p) => living.get(p.id)).map((p) => p.id) : []);
 
   // ── Rodziny: pary z tabeli związków + rodzice wspólnych dzieci ──
   const families = new Map<string, Family>();

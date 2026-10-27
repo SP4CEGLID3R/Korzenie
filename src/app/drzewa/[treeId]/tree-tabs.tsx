@@ -3,17 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function TreeTabs({ treeId, issueCount }: { treeId: string; issueCount: number }) {
+export function TreeTabs({ treeId, issueCount, pendingCount }: { treeId: string; issueCount: number; pendingCount: number }) {
   const pathname = usePathname();
   const base = `/drzewa/${treeId}`;
   const tabs = [
     { href: base, label: "Drzewo", active: pathname === base },
     { href: `${base}/osoby`, label: "Osoby", active: pathname.startsWith(`${base}/osoby`) },
     {
+      href: `${base}/odkrycia`,
+      label: "Odkrycia",
+      active: pathname.startsWith(`${base}/odkrycia`),
+      badge: pendingCount,
+      badgeLabel: "nowych propozycji",
+      tone: "accent",
+    },
+    {
       href: `${base}/spojnosc`,
       label: "Spójność",
       active: pathname.startsWith(`${base}/spojnosc`),
       badge: issueCount,
+      badgeLabel: "ostrzeżeń",
+      tone: "danger",
     },
     { href: `${base}/ustawienia`, label: "Ustawienia i eksport", active: pathname.startsWith(`${base}/ustawienia`) },
   ];
@@ -32,7 +42,10 @@ export function TreeTabs({ treeId, issueCount }: { treeId: string; issueCount: n
             >
               {t.label}
               {t.badge ? (
-                <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs text-danger" aria-label={`${t.badge} ostrzeżeń`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${t.tone === "danger" ? "bg-danger-soft text-danger" : "bg-accent-soft text-ink"}`}
+                  aria-label={`${t.badge} ${t.badgeLabel}`}
+                >
                   {t.badge}
                 </span>
               ) : null}

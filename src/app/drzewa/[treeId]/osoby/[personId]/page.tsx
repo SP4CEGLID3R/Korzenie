@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PlaceDatalist } from "@/components/tree/fields";
+import { db } from "@/lib/db";
 import { checkConsistency } from "@/lib/genealogy/consistency";
 import { formatGenDate, formatGenDateForInput } from "@/lib/genealogy/dates";
 import { displayName, EVENT_LABEL, lifespan, SEX_LABEL } from "@/lib/genealogy/names";
 import type { SnapshotEvent, SnapshotPerson } from "@/lib/genealogy/types";
-import { isPresumedLiving } from "@/lib/privacy/living";
+import { livingStatusMap } from "@/lib/privacy/living";
 import { getTreeAccess, requirePersonInTree } from "@/lib/trees/access";
 import { loadPersonNeighborhood, loadTreePlaces, loadTreeSnapshot } from "@/lib/trees/snapshot";
 import {
@@ -21,6 +22,8 @@ import {
   unlinkUnionAction,
   updateEventAction,
 } from "../../actions";
+import { searchPersonAction } from "../../odkrycia/actions";
+import { SearchPersonButton } from "../../odkrycia/search-person-button";
 import { PARENT_TYPE_LABEL } from "../parent-type-select";
 import { ConfirmSubmit, EventForm, LinkExistingForm, type EventDefaults } from "./forms";
 
@@ -60,7 +63,7 @@ async function PersonCard({ params }: { params: Promise<{ treeId: string; person
   const byId = new Map(hood.persons.map((p) => [p.id, p]));
   const person = byId.get(personId)!;
   const name = displayName(person.names);
-  const living = isPresumedLiving(person);
+  const living = livingStatusMap(hood).get(personId) ?? true;
   const issues = checkConsistency(hood).filter((i) => i.personIds.includes(personId));
 
   const parentLinks = hood.parentLinks.filter((l) => l.childId === personId);
@@ -369,6 +372,10 @@ async function PersonCard({ params }: { params: Promise<{ treeId: string; person
         )}
       </section>
 
+      <Suspense fallback={null}>
+        <SourcesSection treeId={treeId} personId={personId} canEdit={canEdit} living={living} />
+      </Suspense>
+
       {person.notes && (
         <section aria-label="Notatki">
           <h3 className="font-serif text-2xl font-semibold">
@@ -405,5 +412,65 @@ async function LinkExisting({ treeId, personId }: { treeId: string; personId: st
         <LinkExistingForm action={linkExistingAction.bind(null, treeId, personId)} options={options} />
       </div>
     </details>
+  );
+}
+
+/** Potwierdzone źródła osoby i propozycje z Odkryć. */
+async function SourcesSection({
+  treeId,
+  personId,
+  canEdit,
+  living,
+}: {
+  treeId: string;
+  personId: string;
+  canEdit: boolean;
+  living: boolean;
+}) {
+  const [citations, pending] = await Promise.all([
+    db.citation.findMany({
+      where: { personId, recordId: { not: null } },
+      include: { record: { include: { source: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.match.count({ where: { personId, status: "PENDING" } }),
+  ]);
+
+  return (
+    <section aria-label="Źródła" className="space-y-3">
+      <h3 className="font-serif text-2xl font-semibold">Źródła i propozycje</h3>
+      {citations.length === 0 ? (
+        <p className="text-ink-muted">Brak potwierdzonych źródeł.</p>
+      ) : (
+        <ul className="space-y-2">
+          {citations.map((c) => {
+            const title = (c.record!.normalized as { title?: string } | null)?.title ?? c.record!.url;
+            return (
+              <li key={c.id} className="card p-3">
+                <a href={c.record!.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent underline underline-offset-4">
+                  {title} ↗
+                </a>
+                <p className="text-xs text-ink-muted">{c.record!.source.citationText ?? c.record!.source.title}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {pending > 0 && (
+        <p>
+          <Link href={`/drzewa/${treeId}/odkrycia?osoba=${personId}`} className="btn-primary">
+            Nowe propozycje do sprawdzenia: {pending}
+          </Link>
+        </p>
+      )}
+      {canEdit &&
+        (living ? (
+          <p className="text-sm text-ink-muted">
+            To osoba żyjąca – nie szukamy jej w zewnętrznych źródłach, żeby chronić jej prywatność.
+          </p>
+        ) : (
+          <SearchPersonButton action={searchPersonAction.bind(null, treeId, personId)} />
+        ))}
+    </section>
   );
 }

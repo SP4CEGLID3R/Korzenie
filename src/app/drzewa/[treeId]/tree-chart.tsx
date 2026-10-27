@@ -14,12 +14,20 @@ function escapeHtml(s: string) {
 
 type CardDatum = { data: { id: string; data: ChartDatum["data"]; main?: boolean } };
 
+function proposalWord(n: number) {
+  if (n === 1) return "propozycja";
+  const d = n % 10;
+  const t = n % 100;
+  return d >= 2 && d <= 4 && !(t >= 12 && t <= 14) ? "propozycje" : "propozycji";
+}
+
 function cardHtml(d: CardDatum) {
-  const { name, lifespan, gender } = d.data.data;
+  const { name, lifespan, gender, pending } = d.data.data;
   const sexClass = gender === "M" ? "kz-card-m" : gender === "F" ? "kz-card-f" : "kz-card-u";
   return `<div class="kz-card ${sexClass}${d.data.main ? " kz-card-main" : ""}">
     <div class="kz-card-name">${escapeHtml(name)}</div>
-    <div class="kz-card-years">${escapeHtml(lifespan || " ")}</div>
+    <div class="kz-card-years">${escapeHtml(lifespan || "\u00a0")}</div>
+    ${pending ? `<div class="kz-card-badge" title="Nowe propozycje w Odkryciach">● ${pending} ${proposalWord(pending)}</div>` : ""}
   </div>`;
 }
 

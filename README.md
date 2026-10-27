@@ -4,11 +4,11 @@ Polski serwis do budowania drzew genealogicznych i odkrywania przodków
 z wykorzystaniem polskich źródeł (indeksy metrykalne, archiwa, otwarte bazy)
 i AI, które **nigdy nie wymyśla faktów**.
 
-> **Stan: faza 1 – ręczne drzewo.** Działa logowanie, drzewa bez limitu osób,
-> formularz „Zacznij od siebie”, dodawanie i edycja osób, wydarzeń (z datami
-> genealogicznymi typu „ok. 1850”, „przed 1863”) i relacji, wykres drzewa,
-> import i eksport GEDCOM oraz „Strażnik spójności”. Kolejne fazy: silnik
-> dopasowań → polskie źródła → funkcje AI → społeczność i wdrożenie.
+> **Stan: faza 2 – silnik dopasowań.** Działa wszystko z fazy 1 (drzewo, GEDCOM,
+> „Strażnik spójności”) oraz „Odkrycia”: wyszukiwanie osób z drzewa w Wikidata,
+> propozycje z wynikiem i wyjaśnieniem, potwierdzanie i odrzucanie. Silnik rozumie
+> łacińskie i rosyjskie formy imion, żeńskie formy nazwisk i podobne brzmienie.
+> Kolejne fazy: polskie źródła (Geneteka) → funkcje AI → społeczność i wdrożenie.
 
 ---
 
@@ -124,6 +124,22 @@ Otwórz <http://localhost:3000>.
    plik GEDCOM** i wgraj pobrany plik (albo eksport z innego serwisu) – powstanie nowe drzewo.
 7. W ustawieniach zmień nazwę drzewa i usuń drzewo testowe (trzeba wpisać jego nazwę).
 
+### 9. Faza 2 – Odkrycia (Wikidata)
+
+1. W pliku `.env` wpisz `APP_CONTACT_EMAIL=` z adresem kontaktowym (Wikimedia wymaga, żeby
+   automat się przedstawiał; bez adresu podajemy tylko link do projektu).
+2. Załóż drzewo z kimś znanym, np. **Tadeusz Kościuszko** (ur. 1746, zm. 1817), ojciec **Ludwik**,
+   matka **Tekla Ratomska**, i dopisz siebie jako potomka (żyjącego).
+3. Na karcie Tadeusza kliknij **Szukaj tej osoby w Wikidata**. Na Twojej karcie przycisku nie ma –
+   osób żyjących nie wysyłamy do żadnego serwisu.
+4. Zakładka **Odkrycia**: osoba z drzewa po lewej, rekord po prawej, wynik w % i „Dlaczego taki
+   wynik?”. Kliknij **Szukaj propozycji**, żeby sprawdzić całe drzewo.
+5. **Potwierdź** – rekord pojawi się na karcie osoby w „Źródłach”. **Odrzuć** – propozycja nie
+   wróci, nawet po ponownym wyszukaniu. „Cofnij decyzję” przywraca ją do sprawdzenia.
+
+> Wikidata zawiera głównie osoby znane. Zwykłych przodków znajdziemy w indeksach metrykalnych
+> (Geneteka) w fazie 3 – silnik dopasowań jest już na to gotowy.
+
 ---
 
 ## Wariant B: wszystko lokalnie (Docker)
@@ -188,6 +204,10 @@ src/
   components/            nagłówek, stopka, motyw, logo, pola formularzy
   lib/
     genealogy/           daty genealogiczne, nazwiska, spójność, dane do wykresu (+ testy)
+    matching/            silnik dopasowań: słownik imion, normalizacja, fonetyka, punktacja (+ testy)
+      config.ts          WSZYSTKIE wagi i progi dopasowań w jednym miejscu
+      data/given-names.ts słownik imion łacina / niemiecki / rosyjski → polski
+    sources/             źródła danych (wspólny interfejs adapterów), Wikidata (+ testy)
     gedcom/              czytanie, import i eksport GEDCOM 5.5.1 (+ testy)
     trees/               uprawnienia do drzewa, odczyt i zapis w bazie, formularze
     auth.ts              kto jest zalogowany (używaj w każdej stronie i akcji)
@@ -225,6 +245,7 @@ src/
 | Mail nie przychodzi | Sprawdź spam. Darmowy Supabase ma niski limit maili na godzinę (patrz krok 7). |
 | Po `git pull` coś nie działa | Uruchom `npm install` i `npm run db:deploy`. |
 | Import GEDCOM: „Plik jest za duży” | Limit to 4 MB (tyle przyjmuje darmowy hosting). Duże drzewo wyeksportuj bez zdjęć albo podziel. |
+| Odkrycia: „Serwis ograniczył liczbę zapytań” | Wikidata chwilowo ogranicza ruch. Odczekaj kilka minut. Wyniki zapamiętujemy na 30 dni, więc powtórne szukanie jest szybkie. |
 | Polskie znaki po imporcie są zepsute | Plik był w starym kodowaniu (ANSEL). Wyeksportuj drzewo ponownie, wybierając UTF-8. |
 
 ---

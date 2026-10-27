@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { db } from "@/lib/db";
 import { checkConsistency } from "@/lib/genealogy/consistency";
 import { getTreeAccess } from "@/lib/trees/access";
 import { loadTreeSnapshot } from "@/lib/trees/snapshot";
@@ -23,6 +24,7 @@ async function TreeHeader({ params }: { params: Promise<{ treeId: string }> }) {
   const { tree, role } = await getTreeAccess(treeId);
   const snapshot = await loadTreeSnapshot(treeId);
   const issues = checkConsistency(snapshot);
+  const pending = await db.match.count({ where: { status: "PENDING", person: { treeId } } });
 
   return (
     <header>
@@ -38,7 +40,7 @@ async function TreeHeader({ params }: { params: Promise<{ treeId: string }> }) {
           {snapshot.persons.length} {personWord(snapshot.persons.length)} · {ROLE_LABEL[role]}
         </p>
       </div>
-      <TreeTabs treeId={treeId} issueCount={issues.length} />
+      <TreeTabs treeId={treeId} issueCount={issues.length} pendingCount={pending} />
     </header>
   );
 }

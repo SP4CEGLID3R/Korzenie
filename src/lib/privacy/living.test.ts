@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPresumedLiving, latestPossibleBirthYear } from "./living";
+import { isPresumedLiving, latestPossibleBirthYear, livingStatusMap } from "./living";
 
 const YEAR = 2026;
 
@@ -110,5 +110,52 @@ describe("latestPossibleBirthYear", () => {
     expect(
       latestPossibleBirthYear({ type: "BIRTH", dateQualifier: "BEFORE", dateYear: 1863 }),
     ).toBe(1863);
+  });
+});
+
+describe("livingStatusMap – wnioskowanie z dat potomków", () => {
+  const p = (id: string, events: { type: string; dateYear?: number }[] = [], livingStatus: "AUTO" | "LIVING" = "AUTO") => ({
+    id,
+    livingStatus,
+    events,
+  });
+
+  it("rodzic i dziadek osoby urodzonej w 1746 r. nie żyją, choć nie mają dat", () => {
+    const m = livingStatusMap(
+      {
+        persons: [p("dziadek"), p("ojciec"), p("syn", [{ type: "BIRTH", dateYear: 1746 }])],
+        parentLinks: [
+          { parentId: "dziadek", childId: "ojciec" },
+          { parentId: "ojciec", childId: "syn" },
+        ],
+      },
+      2026,
+    );
+    expect(m.get("ojciec")).toBe(false);
+    expect(m.get("dziadek")).toBe(false);
+  });
+
+  it("rodzic dziecka urodzonego 60 lat temu – bez dat nadal traktowany jako żyjący", () => {
+    const m = livingStatusMap(
+      { persons: [p("ojciec"), p("syn", [{ type: "BIRTH", dateYear: 1966 }])], parentLinks: [{ parentId: "ojciec", childId: "syn" }] },
+      2026,
+    );
+    expect(m.get("ojciec")).toBe(true);
+  });
+
+  it("ręczne „żyje” ma pierwszeństwo, a pętla w danych nie zawiesza programu", () => {
+    const m = livingStatusMap(
+      {
+        persons: [p("a", [], "LIVING"), p("b"), p("c", [{ type: "BIRTH", dateYear: 1800 }])],
+        parentLinks: [
+          { parentId: "a", childId: "c" },
+          { parentId: "b", childId: "a" },
+          { parentId: "a", childId: "b" },
+        ],
+      },
+      2026,
+    );
+    expect(m.get("a")).toBe(true);
+    expect(m.get("b")).toBe(false);
   });
 });

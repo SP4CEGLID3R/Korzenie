@@ -1,0 +1,546 @@
+{
+ "head": {
+  "vars": [
+   "item",
+   "itemLabel",
+   "itemDescription",
+   "sex",
+   "birth",
+   "birthPrecision",
+   "death",
+   "deathPrecision",
+   "birthPlace",
+   "birthPlaceLabel",
+   "birthCoord",
+   "deathPlace",
+   "deathPlaceLabel",
+   "deathCoord",
+   "father",
+   "fatherLabel",
+   "mother",
+   "motherLabel",
+   "spouse",
+   "spouseLabel"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-02-12T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-10-15T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-01-01T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "9"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-10-15T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-02-04T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-10-15T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-02-12T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-01-01T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "9"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-01-01T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "9"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-01-01T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "9"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q191479"
+    },
+    "sex": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q6581097"
+    },
+    "birth": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1746-02-04T00:00:00Z"
+    },
+    "birthPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "11"
+    },
+    "death": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1817-01-01T00:00:00Z"
+    },
+    "deathPrecision": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "9"
+    },
+    "birthPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2579602"
+    },
+    "birthCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(25.123752777 52.765533333)"
+    },
+    "deathPlace": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q68965"
+    },
+    "deathCoord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(7.5375 47.208055555)"
+    },
+    "father": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11763952"
+    },
+    "mother": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q9356383"
+    },
+    "itemLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tadeusz Kościuszko"
+    },
+    "itemDescription": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "polski i amerykański generał, bohater narodowy (1746–1817)"
+    },
+    "birthPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Mereczowszczyzna"
+    },
+    "deathPlaceLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Solura"
+    },
+    "fatherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Ludwik Tadeusz Kościuszko"
+    },
+    "motherLabel": {
+     "xml:lang": "pl",
+     "type": "literal",
+     "value": "Tekla Ratomska"
+    }
+   }
+  ]
+ }
+}
