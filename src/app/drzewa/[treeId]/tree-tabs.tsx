@@ -18,6 +18,11 @@ export function TreeTabs({ treeId, issueCount, pendingCount }: { treeId: string;
       tone: "accent",
     },
     {
+      href: `${base}/tropiciel`,
+      label: "Tropiciel",
+      active: pathname.startsWith(`${base}/tropiciel`),
+    },
+    {
       href: `${base}/spojnosc`,
       label: "Spójność",
       active: pathname.startsWith(`${base}/spojnosc`),

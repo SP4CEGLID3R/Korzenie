@@ -556,6 +556,9 @@ model ResearchTask {
   treeId        String             @db.Uuid
   personId      String             @db.Uuid
   kind          ResearchTaskKind
+  /// Stały klucz propozycji Tropiciela (np. „FIND_BIRTH:<osoba>”) – żeby decyzja
+  /// „zrobione / pomiń” dotyczyła zawsze tej samej propozycji.
+  key           String
   title         String
   /// Parametry wyszukiwania: imiona, nazwiska, parafia, zakres lat, gotowe linki.
   details       Json
@@ -568,7 +571,8 @@ model ResearchTask {
   tree   Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
   person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 
-  @@index([personId, status])
+  @@unique([personId, key])
+  @@index([treeId, status])
   @@schema("app")
 }
 

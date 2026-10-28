@@ -56,19 +56,21 @@ export type PersonSearchResult = {
  * Nic nie trafia do drzewa – propozycje czekają na decyzję użytkownika.
  * Odrzuconych i potwierdzonych propozycji nie zmieniamy, więc odrzucone nie wracają.
  */
-async function saveCandidates(facts: PersonFacts, candidates: SourceCandidate[], adapter: SourceAdapter) {
+export async function saveCandidates(facts: PersonFacts, candidates: SourceCandidate[], adapter: SourceAdapter) {
   if (candidates.length === 0) return 0;
   const sourceId = await ensureGlobalSource(adapter);
   let newMatches = 0;
   for (const c of candidates) {
-    const result = scoreMatch(facts, c.facts);
+    // W akcie ślubu kobietę porównujemy z panną młodą, a mężczyznę z panem młodym.
+    const recordFacts = facts.sex === "FEMALE" && c.altFacts ? c.altFacts : c.facts;
+    const result = scoreMatch(facts, recordFacts);
     if (result.score < MATCH_CONFIG.thresholds.possible) continue;
 
     const data = {
       url: c.url,
       year: c.year,
       raw: c.raw as Prisma.InputJsonValue,
-      normalized: { ...c.facts, title: c.title } as Prisma.InputJsonValue,
+      normalized: { ...c.facts, title: c.title, alt: c.altFacts ?? null } as Prisma.InputJsonValue,
     };
     const record = await db.record.upsert({
       where: { sourceId_externalId: { sourceId, externalId: c.externalId } },

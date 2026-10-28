@@ -46,6 +46,8 @@ export type RecordFacts = {
   person: NameFact & { sex?: Sex | null };
   /** Rok wydarzenia opisanego w rekordzie (urodzenia, ślubu, zgonu). */
   year?: number | null;
+  /** Dokładna data wydarzenia [rok, miesiąc, dzień], jeśli źródło ją podaje. */
+  date?: [number, number, number] | null;
   birth?: YearRange | null;
   death?: YearRange | null;
   place?: PlaceFact | null;

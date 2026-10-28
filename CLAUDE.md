@@ -52,9 +52,20 @@ rozwiązania, pracuj fazami i po każdej fazie zatrzymaj się z instrukcją test
   kolejka, Retry-After) i cache `SourceQueryCache`. Osób żyjących (`livingStatusMap`) nigdy
   nie wysyłamy na zewnątrz. Wikidata: SPARQL w dwóch krokach (wyszukiwarka → szczegóły) –
   jedno połączone zapytanie przekraczało limit 60 s.
+- Geneteka: linki `src/lib/sources/geneteka-links.ts` (domyślnie), pobieranie `geneteka.ts`
+  tylko przy `GENETEKA_FETCH_ENABLED=true`; robots.txt Geneteki ma Crawl-delay 120 s –
+  limit liczony atomowo w bazie (`SourceQueryCache`, klucz `ratelimit:geneteka`). Nie zapisuj
+  prawdziwych indeksów Geneteki w repozytorium (jest publiczne) – fikstury są zanonimizowane.
+  Linków do serwisów komercyjnych z uwag Geneteki (np. FamilySearch) nie przenosimy.
+- Tropiciel: `src/lib/detective/suggest.ts` (czyste reguły, klucze zadań stałe);
+  decyzje użytkownika w `ResearchTask` (unikalne `personId+key`). Fakty z rekordów:
+  `src/lib/matching/adopt.ts` – tylko propozycje, użytkownik zaznacza, każdy fakt dostaje Citation.
+- `prisma migrate dev` nie działa bez terminala interaktywnego (np. w chmurze) – wtedy:
+  `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`
+  do nowego katalogu migracji, potem `prisma migrate deploy` i `prisma generate`.
 - Przed oddaniem fazy: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 
 ## Fazy
 0 fundament ✅ · 1 ręczne drzewo, GEDCOM, spójność ✅ · 2 silnik dopasowań + Wikidata + „Odkrycia” ✅ ·
-3 Geneteka + Tropiciel · 4 AI (biografie, kontekst, Commons, czytnik, czat) ·
+3 Geneteka + Tropiciel ✅ · 4 AI (biografie, kontekst, Commons, czytnik, czat) ·
 5 udostępnianie, komentarze, mapa, polityka prywatności, usuwanie konta, limity AI, Vercel.

@@ -4,11 +4,12 @@ Polski serwis do budowania drzew genealogicznych i odkrywania przodków
 z wykorzystaniem polskich źródeł (indeksy metrykalne, archiwa, otwarte bazy)
 i AI, które **nigdy nie wymyśla faktów**.
 
-> **Stan: faza 2 – silnik dopasowań.** Działa wszystko z fazy 1 (drzewo, GEDCOM,
-> „Strażnik spójności”) oraz „Odkrycia”: wyszukiwanie osób z drzewa w Wikidata,
-> propozycje z wynikiem i wyjaśnieniem, potwierdzanie i odrzucanie. Silnik rozumie
-> łacińskie i rosyjskie formy imion, żeńskie formy nazwisk i podobne brzmienie.
-> Kolejne fazy: polskie źródła (Geneteka) → funkcje AI → społeczność i wdrożenie.
+> **Stan: faza 3 – polskie źródła i Tropiciel.** Działa wszystko z faz 1–2 (drzewo, GEDCOM,
+> spójność, Odkrycia z Wikidata) oraz „Tropiciel”: dla każdej osoby gotowe wyszukiwania
+> w Genetece (urodzenie, ślub rodziców 0–15 lat przed urodzeniem dziecka, rodzeństwo, zgon),
+> pokolenie po pokoleniu w górę drzewa. Z potwierdzonego rekordu możesz jednym kliknięciem
+> dodać zaznaczone fakty (daty, parafię, rodziców, ślub) – każdy z przypisem do źródła.
+> Kolejne fazy: funkcje AI → społeczność i wdrożenie.
 
 ---
 
@@ -140,6 +141,25 @@ Otwórz <http://localhost:3000>.
 > Wikidata zawiera głównie osoby znane. Zwykłych przodków znajdziemy w indeksach metrykalnych
 > (Geneteka) w fazie 3 – silnik dopasowań jest już na to gotowy.
 
+### 10. Faza 3 – Tropiciel i Geneteka
+
+1. Zaimportuj albo wpisz drzewo z przodkami sprzed ~1925 r. (np. pradziadek ur. 1880 w Chęcinach,
+   jego rodzice bez dat).
+2. Zakładka **Tropiciel**: propozycje pogrupowane w pokolenia (Rodzice, Dziadkowie…). Każda ma
+   wyjaśnienie „dlaczego tu i w tych latach” i przyciski **Geneteka: …** – otwierają wyszukiwarkę
+   z wpisanymi danymi. Jeśli województwo nie zostało rozpoznane, wybierz je z listy.
+3. Kliknij **✓ Zrobione** albo **Pomiń** – zadanie zniknie z listy („Pokaż także zrobione” → **Przywróć**).
+4. Te same „Następne kroki” są na karcie osoby.
+5. Po potwierdzeniu rekordu w **Odkryciach** zobaczysz listę **„Dodać do drzewa z tego rekordu?”** –
+   zaznacz fakty i kliknij **Dodaj zaznaczone**. Na karcie osoby pojawią się nowe dane i źródło,
+   a Tropiciel doda zadania oznaczone „nowe po potwierdzeniu”.
+
+> **Automatyczne pobieranie z Geneteki** (`GENETEKA_FETCH_ENABLED=true`) jest domyślnie wyłączone
+> i **przed użyciem na produkcji wymaga zgody Polskiego Towarzystwa Genealogicznego**. Gdy je
+> włączysz, przy zadaniach pojawi się „Pobierz wyniki do Odkryć”. Geneteka w robots.txt prosi
+> automaty o **120 sekund przerwy między zapytaniami** – aplikacja tego pilnuje (licznik w bazie,
+> wspólny dla wszystkich serwerów) i zapamiętuje wyniki na 30 dni.
+
 ---
 
 ## Wariant B: wszystko lokalnie (Docker)
@@ -207,7 +227,10 @@ src/
     matching/            silnik dopasowań: słownik imion, normalizacja, fonetyka, punktacja (+ testy)
       config.ts          WSZYSTKIE wagi i progi dopasowań w jednym miejscu
       data/given-names.ts słownik imion łacina / niemiecki / rosyjski → polski
-    sources/             źródła danych (wspólny interfejs adapterów), Wikidata (+ testy)
+    sources/             źródła danych (wspólny interfejs adapterów): Wikidata, Geneteka (+ testy)
+      geneteka-links.ts  gotowe linki do wyszukiwarki Geneteki (domyślny tryb)
+      geneteka.ts        pobieranie wyników – tylko za flagą GENETEKA_FETCH_ENABLED
+    detective/           Tropiciel: propozycje następnych kroków (+ testy)
     gedcom/              czytanie, import i eksport GEDCOM 5.5.1 (+ testy)
     trees/               uprawnienia do drzewa, odczyt i zapis w bazie, formularze
     auth.ts              kto jest zalogowany (używaj w każdej stronie i akcji)
@@ -246,6 +269,7 @@ src/
 | Po `git pull` coś nie działa | Uruchom `npm install` i `npm run db:deploy`. |
 | Import GEDCOM: „Plik jest za duży” | Limit to 4 MB (tyle przyjmuje darmowy hosting). Duże drzewo wyeksportuj bez zdjęć albo podziel. |
 | Odkrycia: „Serwis ograniczył liczbę zapytań” | Wikidata chwilowo ogranicza ruch. Odczekaj kilka minut. Wyniki zapamiętujemy na 30 dni, więc powtórne szukanie jest szybkie. |
+| „Geneteka pozwala automatom na jedno zapytanie co 120 s” | Tak działa limit z robots.txt Geneteki (tylko przy włączonym pobieraniu). Odczekaj albo otwórz link. |
 | Polskie znaki po imporcie są zepsute | Plik był w starym kodowaniu (ANSEL). Wyeksportuj drzewo ponownie, wybierając UTF-8. |
 
 ---

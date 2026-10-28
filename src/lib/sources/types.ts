@@ -11,6 +11,8 @@ export type SourceQuery = {
   sex?: Sex;
   birth?: YearRange | null;
   death?: YearRange | null;
+  /** Region w formacie źródła (np. kod województwa w Genetece). */
+  region?: string | null;
 };
 
 /** Rekord znaleziony w źródle, gotowy do zapisania w tabeli Record. */
@@ -22,6 +24,8 @@ export type SourceCandidate = {
   title: string;
   year: number | null;
   facts: RecordFacts;
+  /** Drugie spojrzenie na ten sam akt – np. panna młoda w akcie ślubu. */
+  altFacts?: RecordFacts;
   raw: unknown;
 };
 

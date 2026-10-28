@@ -1,0 +1,31 @@
+{
+  "_opis": "Struktura odpowiedzi api/getAct.php Geneteki (X 2026). DANE FIKCYJNE – imiona, nazwiska, numery i identyfikatory zostały zmienione; prawdziwe indeksy są własnością PTG i wolontariuszy.",
+  "B": {
+    "draw": 1,
+    "recordsTotal": 2,
+    "recordsFiltered": 2,
+    "data": [
+      [1851, "45", "Jan ", "Testowski", "Wojciech", "Jadwiga", "Przykładowa", "Chęciny", "Chęciny", "<img src=\"images/i.png\" title=\" &#013;Data urodzenia: 04.10.1851 r. \"><a href=\"http://www.kielce.ap.gov.pl\" target=\"_blank\"><img src=\"images/z.png\" title=\"Miejsce przechowywania ksiąg: &#013;Archiwum Państwowe w Kielcach &#013;&#013;ul. Przykładowa 1\"></a><a target=\"_blank\" href=\"https://www.genealodzy.pl/user.php?op=userinfo&amp;uname=wolontariusz1\"><img src=\"images/a.png\" title=\"Indeks dodał: wolontariusz1 Weryfikował: wolontariusz2\"></a><a class=\"gt\" target =\"doc\" href=\"https://metryki.genealodzy.pl/metryki.php?op=kt&amp;ar=10&amp;zs=0000x&amp;sy=101&amp;kt=1\"><img src=\"images/s.png\"></a><a href=\"https://familysearch.org/pal:/MM9.3.1/TH-0000\"><img src=\"images/s.png\"></a><a href=\"fix.php?gid=1000001&bdm=B&w=13sk&rid=1234&lang=pol\" target=\"_blank\"><img src=\"images/fix.png\" title=\"Zgłoś poprawkę\"></a>"],
+      [1852, "7", "Maria ", "Testowska", "", "", "", "Kielce Katedra", "Dyminy", "<img src=\"images/i.png\" title=\"Uwagi: nieślubna  \"><a href=\"fix.php?gid=1000002&bdm=B&w=13sk&rid=999&lang=pol\" target=\"_blank\"><img src=\"images/fix.png\" title=\"Zgłoś poprawkę\"></a>"]
+    ],
+    "parishes": []
+  },
+  "S": {
+    "draw": 1,
+    "recordsTotal": 1,
+    "recordsFiltered": 1,
+    "data": [
+      [1849, "16", "Wojciech ", "Testowski", "Jan, Katarzyna Kowalkowska", "Jadwiga ", "Przykładowa", "Maciej, Anna Dybała", "Chęciny", "<img src=\"images/i.png\" title=\"&#013;Miejscowość: Bolmin  &#013;Data ślubu: 09.06.1849 r. \"><span class=\"_z\"></span><a target=\"_blank\" href=\"https://www.genealodzy.pl/user.php?op=userinfo&amp;uname=wolontariusz3\"><img src=\"images/a.png\" title=\"Indeks dodał: wolontariusz3\"></a><a href=\"fix.php?gid=2000001&bdm=S&w=13sk&rid=1234&lang=pol\" target=\"_blank\"><img src=\"images/fix.png\" title=\"Zgłoś poprawkę\"></a>"]
+    ],
+    "parishes": []
+  },
+  "D": {
+    "draw": 1,
+    "recordsTotal": 1,
+    "recordsFiltered": 1,
+    "data": [
+      [1890, "32", "Jan ", "Testowski", "Wojciech", "Jadwiga", "Przykładowa", "Chęciny ", "", "<img src=\"images/i.png\" title=\"Uwagi: wdowiec, lat 39  &#013;Data zgonu: 01.02.1890 r. \"><a href=\"fix.php?gid=3000001&bdm=D&w=13sk&rid=1234&lang=pol\" target=\"_blank\"><img src=\"images/fix.png\" title=\"Zgłoś poprawkę\"></a>"]
+    ],
+    "parishes": []
+  }
+}

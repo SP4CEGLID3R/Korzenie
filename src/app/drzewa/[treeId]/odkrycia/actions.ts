@@ -1,8 +1,15 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
+import { suggestTasks } from "@/lib/detective/suggest";
+import { proposeFacts } from "@/lib/matching/adopt";
+import type { RecordFacts } from "@/lib/matching/types";
+import { loadConfirmedSources } from "@/lib/trees/detective";
+import { addPersonalEvent, createPerson, dateColumns, ensureUnion, linkParent, resolvePlace } from "@/lib/trees/write";
 import { personFacts } from "@/lib/matching/facts";
 import { findMatchesForPerson, findMatchesForPersons, searchability } from "@/lib/matching/run";
 import { wikidataAdapter } from "@/lib/sources/wikidata";
@@ -113,6 +120,117 @@ export async function decideMatchAction(treeId: string, matchId: string, decisio
       await tx.citation.deleteMany({ where: { personId: match.personId, recordId: match.recordId } });
     }
   });
+  if (status === "CONFIRMED") {
+    await createFollowUpTasks(treeId, match.personId, match.id);
+    revalidatePath(`/drzewa/${treeId}`, "layout");
+    // Od razu pokazujemy potwierdzony rekord z listą faktów do dodania.
+    redirect(`/drzewa/${treeId}/odkrycia?status=potwierdzone&dopasowanie=${match.id}`);
+  }
   revalidatePath(`/drzewa/${treeId}`, "layout");
   refresh();
+}
+
+/**
+ * Po potwierdzeniu rekordu Tropiciel zapisuje następne kroki dla tej osoby
+ * i jej rodziców (oznaczone jako „nowe po potwierdzeniu”).
+ */
+async function createFollowUpTasks(treeId: string, personId: string, matchId: string) {
+  const tree = await loadTreeSnapshot(treeId);
+  const confirmed = await loadConfirmedSources(treeId);
+  const parents = tree.parentLinks.filter((l) => l.childId === personId).map((l) => l.parentId);
+  for (const id of [personId, ...parents]) {
+    for (const t of suggestTasks(tree, id, confirmed)) {
+      await db.researchTask.upsert({
+        where: { personId_key: { personId: id, key: t.key } },
+        create: {
+          treeId,
+          personId: id,
+          key: t.key,
+          kind: t.kind,
+          title: t.title,
+          details: t as unknown as Prisma.InputJsonValue,
+          originMatchId: matchId,
+        },
+        update: {},
+      });
+    }
+  }
+}
+
+/** Dodaje do drzewa zaznaczone fakty z potwierdzonego rekordu (każdy z przypisem do rekordu). */
+export async function applyFactsAction(treeId: string, matchId: string, _prev: SearchState, fd: FormData): Promise<SearchState> {
+  let added = 0;
+  try {
+    await requireTreeEditor(treeId);
+    const match = await db.match.findFirst({
+      where: { id: matchId, status: "CONFIRMED", person: { treeId } },
+      include: { record: true, person: { select: { sex: true } } },
+    });
+    if (!match) return { error: "Nie znaleziono potwierdzonego rekordu." };
+    const selected = new Set(fd.getAll("fact").map(String));
+    if (selected.size === 0) return { error: "Zaznacz, co chcesz dodać." };
+
+    const normalized = match.record.normalized as unknown as RecordFacts & { alt?: RecordFacts | null };
+    const recordFacts = match.person.sex === "FEMALE" && normalized.alt ? normalized.alt : normalized;
+    const tree = await loadTreeSnapshot(treeId);
+    // Propozycje liczymy na serwerze od nowa – nie ufamy temu, co przyszło z formularza.
+    const proposals = proposeFacts(tree, match.personId, recordFacts).filter((p) => selected.has(p.key));
+    const recordId = match.recordId;
+    const personId = match.personId;
+
+    await db.$transaction(async (tx) => {
+      const cite = (data: { personId?: string; eventId?: string }) => tx.citation.create({ data: { ...data, recordId } });
+      const newParents: string[] = [];
+      for (const p of proposals) {
+        if (p.kind === "event") {
+          if (p.updateEventId) {
+            const placeId = p.place ? await resolvePlace(tx, treeId, p.place) : undefined;
+            await tx.event.update({
+              where: { id: p.updateEventId },
+              data: { ...(p.date.dateYear !== null ? dateColumns(p.date) : {}), ...(placeId ? { placeId } : {}) },
+            });
+            await cite({ eventId: p.updateEventId });
+          } else {
+            const e = await addPersonalEvent(tx, treeId, personId, { type: p.eventType, date: p.date, place: p.place, description: null });
+            await cite({ eventId: e.id });
+            if (p.eventType === "DEATH") {
+              await tx.person.updateMany({ where: { id: personId, livingStatus: "AUTO" }, data: { livingStatus: "DECEASED" } });
+            }
+          }
+        } else if (p.kind === "parent") {
+          const created = await createPerson(tx, treeId, { ...p.person, livingStatus: "AUTO", notes: null });
+          await linkParent(tx, created.id, personId);
+          await cite({ personId: created.id });
+          newParents.push(created.id);
+        } else if (p.kind === "marriage") {
+          let spouseId = p.spouseId;
+          if (!spouseId && p.newSpouse) {
+            const created = await createPerson(tx, treeId, { ...p.newSpouse, livingStatus: "AUTO", notes: null });
+            await cite({ personId: created.id });
+            spouseId = created.id;
+          }
+          if (!spouseId) continue;
+          const union = await ensureUnion(tx, treeId, personId, spouseId);
+          const placeId = await resolvePlace(tx, treeId, p.place);
+          const e = await tx.event.create({
+            data: { treeId, unionId: union.id, type: "MARRIAGE", ...dateColumns(p.date), placeId },
+            select: { id: true },
+          });
+          await cite({ eventId: e.id });
+        }
+      }
+      // Nowi rodzice tworzą parę – także z rodzicem, który już był w drzewie.
+      const allParents = await tx.parentChild.findMany({ where: { childId: personId }, select: { parentId: true } });
+      if (newParents.length > 0 && allParents.length === 2) {
+        await ensureUnion(tx, treeId, allParents[0].parentId, allParents[1].parentId);
+      }
+    });
+
+    added = proposals.length;
+  } catch (e) {
+    return { error: sourceErrorMessage(e) };
+  }
+  revalidatePath(`/drzewa/${treeId}`, "layout");
+  // Po dodaniu formularz znika (nie ma już czego dodać), więc potwierdzenie pokazujemy w adresie.
+  redirect(`/drzewa/${treeId}/odkrycia?status=potwierdzone&dopasowanie=${matchId}&dodano=${added}`);
 }

@@ -9,7 +9,10 @@ import { personFacts } from "@/lib/matching/facts";
 import type { ExplanationItem, NameFact, PlaceFact, RecordFacts, YearRange } from "@/lib/matching/types";
 import { getTreeAccess } from "@/lib/trees/access";
 import { loadTreeSnapshot } from "@/lib/trees/snapshot";
-import { decideMatchAction, searchTreeBatchAction } from "./actions";
+import { proposeFacts } from "@/lib/matching/adopt";
+import type { GenetekaAct } from "@/lib/sources/geneteka-parse";
+import { applyFactsAction, decideMatchAction, searchTreeBatchAction } from "./actions";
+import { AdoptFactsForm } from "./adopt-facts-form";
 import { TreeSearch } from "./tree-search";
 
 export const metadata: Metadata = { title: "Odkrycia" };
@@ -58,6 +61,9 @@ async function Discoveries({
   const { canEdit } = await getTreeAccess(treeId);
   const statusKey: StatusKey = z.enum(["oczekujace", "potwierdzone", "odrzucone"]).catch("oczekujace").parse(sp.status);
   const personFilter = z.uuid().safeParse(sp.osoba);
+  const highlightParam = z.uuid().safeParse(sp.dopasowanie);
+  const highlight = highlightParam.success ? highlightParam.data : null;
+  const added = typeof sp.dodano === "string" ? Number(sp.dodano) : NaN;
 
   const [tree, counts, matches] = await Promise.all([
     loadTreeSnapshot(treeId),
@@ -73,6 +79,7 @@ async function Discoveries({
       take: 100,
     }),
   ]);
+  if (highlight) matches.sort((a, b) => Number(b.id === highlight) - Number(a.id === highlight));
   const count = (s: string) => counts.find((c) => c.status === s)?._count ?? 0;
   const byId = new Map(tree.persons.map((p) => [p.id, p]));
   const filteredPerson = personFilter.success ? byId.get(personFilter.data) : undefined;
@@ -125,11 +132,16 @@ async function Discoveries({
             const p = byId.get(m.personId);
             if (!p) return null;
             const facts = personFacts(tree, p.id);
-            const rec = m.record.normalized as unknown as RecordFacts & { title?: string };
+            const normalized = m.record.normalized as unknown as RecordFacts & { title?: string; alt?: RecordFacts | null };
+            // W akcie ślubu kobietę pokazujemy jako pannę młodą.
+            const rec = p.sex === "FEMALE" && normalized.alt ? normalized.alt : normalized;
+            const gt = m.record.source.kind === "GENETEKA" ? (m.record.raw as unknown as GenetekaAct) : null;
+            const proposals = m.status === "CONFIRMED" && canEdit ? proposeFacts(tree, p.id, rec) : [];
+            const highlighted = m.id === highlight;
             const expl = m.explanation as unknown as { items: ExplanationItem[]; summary: string };
             const strong = m.score >= MATCH_CONFIG.thresholds.strong;
             return (
-              <li key={m.id} className="card overflow-hidden">
+              <li key={m.id} className={`card overflow-hidden ${highlighted ? "ring-2 ring-accent" : ""}`}>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper-sunken/60 px-4 py-3">
                   <p className="font-semibold">
                     <span className={`mr-2 rounded-full px-2.5 py-1 text-sm ${strong ? "bg-moss text-paper" : "bg-accent-soft text-ink"}`}>
@@ -180,6 +192,21 @@ async function Discoveries({
                       </a>
                       <span className="block text-xs text-ink-muted">{m.record.source.citationText}</span>
                     </p>
+                    {gt && (
+                      <div className="mt-2 space-y-1 text-xs text-ink-muted">
+                        {gt.actNumber && <p>Akt nr {gt.actNumber}{gt.parish ? `, parafia ${gt.parish}` : ""}</p>}
+                        {gt.archive && <p>Księgi: {gt.archive}</p>}
+                        {gt.remarks.length > 0 && <p>Uwagi indeksującego: {gt.remarks.join("; ")}</p>}
+                        {gt.scanUrl && (
+                          <p>
+                            <a href={gt.scanUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent underline underline-offset-4">
+                              Skan aktu ↗
+                            </a>
+                          </p>
+                        )}
+                        {gt.indexedBy && <p>Zindeksowane przez wolontariuszy PTG: {gt.indexedBy}. Dziękujemy!</p>}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -199,6 +226,23 @@ async function Discoveries({
                     ))}
                   </ul>
                 </details>
+
+                {highlighted && Number.isFinite(added) && added > 0 && (
+                  <p role="status" className="border-t border-line bg-paper-sunken/40 px-4 py-3 text-sm">
+                    ✓ Dodano do drzewa: {added}. Każdy dodany fakt ma przypis do tego rekordu.{" "}
+                    <Link href={`/drzewa/${treeId}/osoby/${p.id}`} className="font-semibold text-accent underline underline-offset-4">
+                      Zobacz kartę osoby
+                    </Link>
+                  </p>
+                )}
+                {proposals.length > 0 && (
+                  <div className="border-t border-line bg-paper-sunken/40 px-4 py-3">
+                    <AdoptFactsForm
+                      action={applyFactsAction.bind(null, treeId, m.id)}
+                      proposals={proposals.map(({ key, label }) => ({ key, label }))}
+                    />
+                  </div>
+                )}
 
                 {canEdit && (
                   <div className="flex flex-wrap gap-2 border-t border-line px-4 py-3">

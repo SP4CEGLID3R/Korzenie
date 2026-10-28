@@ -22,6 +22,10 @@ import {
   unlinkUnionAction,
   updateEventAction,
 } from "../../actions";
+import { TaskList } from "@/components/detective/task-list";
+import { suggestTasks } from "@/lib/detective/suggest";
+import { isGenetekaFetchEnabled } from "@/lib/sources/geneteka";
+import { loadConfirmedSources, loadTaskStatuses } from "@/lib/trees/detective";
 import { searchPersonAction } from "../../odkrycia/actions";
 import { SearchPersonButton } from "../../odkrycia/search-person-button";
 import { PARENT_TYPE_LABEL } from "../parent-type-select";
@@ -373,6 +377,10 @@ async function PersonCard({ params }: { params: Promise<{ treeId: string; person
       </section>
 
       <Suspense fallback={null}>
+        <NextSteps treeId={treeId} personId={personId} canEdit={canEdit} living={living} />
+      </Suspense>
+
+      <Suspense fallback={null}>
         <SourcesSection treeId={treeId} personId={personId} canEdit={canEdit} living={living} />
       </Suspense>
 
@@ -471,6 +479,25 @@ async function SourcesSection({
         ) : (
           <SearchPersonButton action={searchPersonAction.bind(null, treeId, personId)} />
         ))}
+    </section>
+  );
+}
+
+/** „Następne kroki” Tropiciela dla tej osoby. */
+async function NextSteps({ treeId, personId, canEdit, living }: { treeId: string; personId: string; canEdit: boolean; living: boolean }) {
+  if (living) return null;
+  const [snapshot, confirmed, statuses] = await Promise.all([
+    loadTreeSnapshot(treeId),
+    loadConfirmedSources(treeId),
+    loadTaskStatuses(treeId),
+  ]);
+  const tasks = suggestTasks(snapshot, personId, confirmed);
+  if (tasks.length === 0) return null;
+  return (
+    <section aria-label="Następne kroki" className="space-y-3">
+      <h3 className="font-serif text-2xl font-semibold">Następne kroki – Tropiciel</h3>
+      <p className="text-sm text-ink-muted">Gotowe wyszukiwania w Genetece (indeksy PTG) – otwórz link i sprawdź wyniki.</p>
+      <TaskList treeId={treeId} tasks={tasks} statuses={statuses} canEdit={canEdit} autoEnabled={isGenetekaFetchEnabled()} />
     </section>
   );
 }
